@@ -3,6 +3,7 @@ import Header from './components/Header'
 import CompanyTabs from './components/CompanyTabs'
 import OfficeFloor from './components/OfficeFloor'
 import TeamPanel from './components/TeamPanel'
+import LogBar from './components/LogBar'
 import { useNotion } from './hooks/useNotion'
 import './App.css'
 
@@ -30,17 +31,7 @@ export default function App() {
         />
         <TeamPanel agents={agents} logs={logs} selectedAgent={selectedAgent} />
       </div>
-      <div style={{
-        background: 'var(--surface)',
-        padding: '0 20px',
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: 12,
-        color: 'var(--text-muted)',
-        borderTop: '1px solid var(--border)',
-      }}>
-        🔄 {secondsUntilRefresh}초 후 새로고침
-      </div>
+      <LogBar logs={logs} secondsUntilRefresh={secondsUntilRefresh} company={company} />
     </div>
   )
 }

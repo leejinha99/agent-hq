@@ -1,0 +1,62 @@
+.log-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 52px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.log-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.log-bar-scroll {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+}
+.log-bar-scroll::-webkit-scrollbar { display: none; }
+
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.log-time { color: var(--text-muted); }
+.log-agent { font-weight: 600; }
+.log-task { color: var(--text-muted); }
+.log-empty { font-size: 12px; color: var(--text-muted); }
+
+.log-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.log-btn {
+  font-size: 12px;
+  color: var(--blue);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 4px 0;
+}
+.log-btn:hover { text-decoration: underline; }
+
+.log-refresh { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
