@@ -1,0 +1,62 @@
+.ceo-desk {
+  background: var(--surface);
+  border: 1.5px solid var(--company-color, #6b7280);
+  border-radius: 12px;
+  padding: 10px 20px;
+  margin: 12px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--company-color) 15%, transparent);
+}
+
+.ceo-room-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--company-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ceo-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ceo-avatar {
+  font-size: 28px;
+  width: 44px;
+  height: 44px;
+  background: var(--surface2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--company-color);
+}
+
+.ceo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ceo-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ceo-title {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ceo-desk-items {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  font-size: 20px;
+  opacity: 0.7;
+}
