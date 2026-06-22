@@ -7,6 +7,7 @@ import os
 import re
 import ssl
 import sys
+import unicodedata
 from pathlib import Path
 from urllib import request, error
 import json
@@ -81,11 +82,11 @@ def scan_active_depts() -> dict[str, set[str]]:
             match = re.search(r'Obsidian_\S+_(.+)$', subfolder.name)
             if not match:
                 continue
-            raw_dept = match.group(1).strip()
+            raw_dept = unicodedata.normalize('NFC', match.group(1).strip())
             notion_dept = DEPT_MAP.get(raw_dept)
             if notion_dept is None:
                 continue
-            has_md = any(subfolder.glob('*.md'))
+            has_md = any(subfolder.rglob('*.md'))
             if has_md:
                 result[company].add(notion_dept)
     return result
