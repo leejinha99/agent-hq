@@ -1,13 +1,13 @@
 export const AGENT_DB = {
-  '씻다': '38711ccd-aa0d-8068-b847-000bc4c98724',
-  '세이퍼': 'e7d11ccd-aa0d-8204-b52b-07675c8e5926',
-  '웰라수': '38711ccd-aa0d-80bc-ba7f-000b512f34ee',
+  '씻다': '38711ccd-aa0d-80bb-ba45-ed23022c72ac',
+  '세이퍼': '38711ccd-aa0d-8055-b6a3-ce867c2f53c4',
+  '웰라수': '38711ccd-aa0d-8074-b834-c8c0c16bc09e',
 }
 
 export const LOG_DB = {
-  '씻다': '097a01d3-ded2-49e7-8c4a-7fba055a5560',
-  '세이퍼': '7d5894c4-b787-49ff-a3e8-07058023d779',
-  '웰라수': 'f7119b72-471c-4925-b28c-dd8776b5523c',
+  '씻다': '904a4040-625c-4867-8757-dfcfc16ec4a8',
+  '세이퍼': '1510dd10-a28f-4e8c-ab76-fadf17bd188c',
+  '웰라수': 'fcc6a033-a825-4c74-804a-e2cabca186a9',
 }
 
 export function notionHeaders() {
