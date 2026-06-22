@@ -22,7 +22,7 @@ function groupByDept(agents, company) {
   }, {})
 }
 
-export default function OfficeFloor({ agents, company, selectedAgent, onSelectAgent }) {
+export default function OfficeFloor({ agents, company, selectedAgent, onSelectAgent, fetchError }) {
   const grouped = groupByDept(agents, company)
   const color = COMPANY_COLOR[company] ?? '#6b7280'
 
@@ -65,7 +65,10 @@ export default function OfficeFloor({ agents, company, selectedAgent, onSelectAg
           })}
         </div>
 
-        {agents.length === 0 && (
+        {fetchError && (
+          <div className="office-empty office-error">⚠ {fetchError}</div>
+        )}
+        {!fetchError && agents.length === 0 && (
           <div className="office-empty">에이전트 데이터를 불러오는 중...</div>
         )}
       </div>

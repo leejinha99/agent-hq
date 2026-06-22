@@ -12,7 +12,7 @@ const COMPANIES = ['씻다', '세이퍼', '웰라수']
 export default function App() {
   const [company, setCompany] = useState('씻다')
   const [selectedAgent, setSelectedAgent] = useState(null)
-  const { agents, logs, secondsUntilRefresh } = useNotion(company)
+  const { agents, logs, secondsUntilRefresh, fetchError } = useNotion(company)
 
   return (
     <div className="app">
@@ -28,6 +28,7 @@ export default function App() {
           company={company}
           selectedAgent={selectedAgent}
           onSelectAgent={setSelectedAgent}
+          fetchError={fetchError}
         />
         <TeamPanel agents={agents} logs={logs} selectedAgent={selectedAgent} />
       </div>

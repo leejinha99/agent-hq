@@ -18,30 +18,36 @@ export function useNotion(company) {
   const [agents, setAgents] = useState([])
   const [logs, setLogs] = useState([])
   const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(POLL_INTERVAL)
+  const [fetchError, setFetchError] = useState(null)
   const countdownRef = useRef(null)
 
   const fetchData = useCallback(async () => {
     if (!company) return
+    setFetchError(null)
     try {
       const [agentsRes, logsRes] = await Promise.all([
         fetch(`/api/agents?company=${encodeURIComponent(company)}`),
         fetch(`/api/logs?company=${encodeURIComponent(company)}&limit=10`),
       ])
-      if (agentsRes.ok && logsRes.ok) {
-        const agentsData = await agentsRes.json()
-        const logsData = await logsRes.json()
-        const logsArr = logsData.logs ?? []
-        setLogs(logsArr)
-        setAgents(agentsData.map(a => ({ ...a, computedStatus: computeStatus(a, logsArr) })))
-      } else {
-        if (agentsRes.ok) setAgents(await agentsRes.json())
-        if (logsRes.ok) {
-          const data = await logsRes.json()
-          setLogs(data.logs ?? [])
-        }
+
+      if (!agentsRes.ok) {
+        const txt = await agentsRes.text().catch(() => agentsRes.status)
+        setFetchError(`agents API ${agentsRes.status}: ${txt}`)
+        setSecondsUntilRefresh(POLL_INTERVAL)
+        return
       }
+
+      const agentsData = await agentsRes.json()
+      let logsArr = []
+      if (logsRes.ok) {
+        const logsData = await logsRes.json()
+        logsArr = logsData.logs ?? []
+      }
+      setLogs(logsArr)
+      setAgents(agentsData.map(a => ({ ...a, computedStatus: computeStatus(a, logsArr) })))
     } catch (e) {
       console.error('Notion fetch failed:', e)
+      setFetchError(`네트워크 오류: ${e.message}`)
     }
     setSecondsUntilRefresh(POLL_INTERVAL)
   }, [company])
@@ -58,5 +64,5 @@ export function useNotion(company) {
     }
   }, [fetchData])
 
-  return { agents, logs, secondsUntilRefresh, refresh: fetchData }
+  return { agents, logs, secondsUntilRefresh, fetchError, refresh: fetchData }
 }
