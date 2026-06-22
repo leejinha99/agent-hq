@@ -7,6 +7,15 @@
   flex-direction: column;
 }
 
+@media (max-width: 768px) {
+  .team-panel {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    overflow: visible;
+    padding: 16px 12px;
+  }
+}
+
 .panel-section-title {
   font-size: 11px;
   font-weight: 600;

@@ -15,11 +15,18 @@ const COMPANY_COLOR = {
 
 function groupByDept(agents, company) {
   const order = DEPT_ORDER[company] ?? []
-  return order.reduce((acc, dept) => {
+  const result = order.reduce((acc, dept) => {
     const deptAgents = agents.filter(a => a.department === dept)
     if (deptAgents.length > 0) acc[dept] = deptAgents
     return acc
   }, {})
+  // DEPT_ORDER에 없는 새 부서는 자동으로 뒤에 추가
+  agents.forEach(a => {
+    if (a.department && !order.includes(a.department) && !result[a.department]) {
+      result[a.department] = agents.filter(ag => ag.department === a.department)
+    }
+  })
+  return result
 }
 
 export default function OfficeFloor({ agents, company, selectedAgent, onSelectAgent, fetchError }) {

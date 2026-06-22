@@ -11,3 +11,17 @@
   overflow: hidden;
   border-top: 1px solid var(--border);
 }
+
+@media (max-width: 768px) {
+  .app {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    grid-template-rows: 56px 54px auto 52px;
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+}

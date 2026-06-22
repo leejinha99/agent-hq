@@ -60,3 +60,18 @@
 .log-btn:hover { text-decoration: underline; }
 
 .log-refresh { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .log-bar {
+    padding: 0 12px;
+    height: 44px;
+  }
+
+  .log-refresh {
+    display: none;
+  }
+
+  .log-bar-label {
+    display: none;
+  }
+}

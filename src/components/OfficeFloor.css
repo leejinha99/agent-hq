@@ -4,6 +4,28 @@
   padding: 16px 20px 20px;
 }
 
+@media (max-width: 768px) {
+  .office-floor {
+    flex: none;
+    overflow: visible;
+    padding: 12px 12px 16px;
+  }
+
+  .floor-plan {
+    padding: 20px 12px 20px;
+    gap: 20px;
+  }
+
+  .ceo-floor-desk {
+    padding: 10px 32px 12px;
+    min-width: 140px;
+  }
+
+  .team-desks-area {
+    gap: 14px;
+  }
+}
+
 /* 바닥 타일 격자 배경 */
 .floor-plan {
   min-height: 100%;

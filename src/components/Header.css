@@ -9,6 +9,20 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 480px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .header-title {
+    font-size: 15px;
+  }
+
+  .ceo-label {
+    display: none;
+  }
+}
+
 .header-logo { display: flex; align-items: center; gap: 10px; }
 .header-icon { font-size: 22px; }
 .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
