@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Header from './components/Header'
 import CompanyTabs from './components/CompanyTabs'
+import CeoDesk from './components/CeoDesk'
 import OfficeFloor from './components/OfficeFloor'
 import TeamPanel from './components/TeamPanel'
 import LogBar from './components/LogBar'
@@ -22,6 +23,7 @@ export default function App() {
         active={company}
         onChange={c => { setCompany(c); setSelectedAgent(null) }}
       />
+      <CeoDesk company={company} />
       <div className="main-grid">
         <OfficeFloor
           agents={agents}
