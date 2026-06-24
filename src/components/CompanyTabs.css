@@ -7,6 +7,14 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .company-tabs {
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+  }
+}
+
 .tab-btn {
   display: flex;
   align-items: center;

@@ -4,7 +4,7 @@ import './TeamPanel.css'
 
 export default function TeamPanel({ agents, logs, selectedAgent }) {
   return (
-    <aside className="team-panel">
+    <aside className={`team-panel${selectedAgent ? ' has-selection' : ''}`}>
       {selectedAgent ? (
         <>
           <div className="panel-section-title">에이전트 프로필</div>

@@ -9,6 +9,10 @@
 
 @media (max-width: 768px) {
   .team-panel {
+    display: none;
+  }
+  .team-panel.has-selection {
+    display: flex;
     border-left: none;
     border-top: 1px solid var(--border);
     overflow: visible;
