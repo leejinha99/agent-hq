@@ -1,43 +1,43 @@
 .log-bar {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  height: 52px;
+  flex-direction: column;
+  padding: 10px 16px 12px;
   background: var(--surface);
   border-top: 1px solid var(--border);
   flex-shrink: 0;
-  overflow: hidden;
+}
+
+.log-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
 .log-bar-label {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
-  white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.log-bar-scroll {
+.log-bar-list {
   display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  flex: 1;
-  scrollbar-width: none;
+  flex-direction: column;
+  gap: 4px;
 }
-.log-bar-scroll::-webkit-scrollbar { display: none; }
 
 .log-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  white-space: nowrap;
+  gap: 6px;
   font-size: 12px;
+  line-height: 1.5;
 }
 
-.log-time { color: var(--text-muted); }
-.log-agent { font-weight: 600; }
+.log-time { color: var(--text-muted); white-space: nowrap; }
+.log-agent { font-weight: 600; white-space: nowrap; }
 .log-task { color: var(--text-muted); }
 .log-empty { font-size: 12px; color: var(--text-muted); }
 
@@ -55,7 +55,7 @@
   border: none;
   cursor: pointer;
   white-space: nowrap;
-  padding: 4px 0;
+  padding: 0;
 }
 .log-btn:hover { text-decoration: underline; }
 
@@ -63,15 +63,10 @@
 
 @media (max-width: 480px) {
   .log-bar {
-    padding: 0 12px;
-    height: 44px;
+    padding: 8px 12px 10px;
   }
 
   .log-refresh {
-    display: none;
-  }
-
-  .log-bar-label {
     display: none;
   }
 }

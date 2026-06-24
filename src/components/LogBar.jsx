@@ -16,16 +16,23 @@ function formatTime(isoString) {
 
 export default function LogBar({ logs, secondsUntilRefresh, company }) {
   const [modalOpen, setModalOpen] = useState(false)
+  const visible = logs.slice(0, 10)
 
   return (
     <>
       <div className="log-bar">
-        <span className="log-bar-label">실행 로그</span>
-        <div className="log-bar-scroll">
-          {logs.length === 0 && (
+        <div className="log-bar-header">
+          <span className="log-bar-label">실행 로그</span>
+          <div className="log-bar-actions">
+            <button className="log-btn" onClick={() => setModalOpen(true)}>전체 보기 →</button>
+            <span className="log-refresh">🔄 {secondsUntilRefresh}초</span>
+          </div>
+        </div>
+        <div className="log-bar-list">
+          {visible.length === 0 && (
             <span className="log-empty">아직 로그가 없어요</span>
           )}
-          {logs.map(log => {
+          {visible.map(log => {
             const st = STATUS_ICON[log.status] ?? { icon: '●', color: '#94a3b8' }
             return (
               <div key={log.id} className="log-item">
@@ -36,10 +43,6 @@ export default function LogBar({ logs, secondsUntilRefresh, company }) {
               </div>
             )
           })}
-        </div>
-        <div className="log-bar-actions">
-          <button className="log-btn" onClick={() => setModalOpen(true)}>전체 보기 →</button>
-          <span className="log-refresh">🔄 {secondsUntilRefresh}초</span>
         </div>
       </div>
       {modalOpen && <LogModal company={company} onClose={() => setModalOpen(false)} />}
