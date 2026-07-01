@@ -15,8 +15,9 @@ const COMPANIES = [
 
 const TYPE_KEYS = ["VS코드", "에이전트", "자동화"];
 
+// 자동화/에이전트 둘 다 아직 선택 안 된 경우(빈칸) 빈 문자열 반환 — "자동화"로 임의 대체하지 않음
 function mapType(types) {
-  return TYPE_KEYS.find((k) => types?.includes(k)) ?? "자동화";
+  return TYPE_KEYS.find((k) => types?.includes(k)) ?? "";
 }
 
 function mapAgent(a) {
@@ -25,7 +26,7 @@ function mapAgent(a) {
     name: a.name,
     type: mapType(a.type),
     status: a.computedStatus, // 'active' | 'developing' | 'inactive'
-    desc: a.description || a.task || "",
+    desc: a.task || a.description || "",
     pc: a.pc || "—",
     storage: a.storage || "—",
     subAgents: [],
@@ -187,7 +188,7 @@ function AgentBox({ agent, accent, mode, theme }) {
   const [open, setOpen] = useState(false);
   const hasSubs = agent.subAgents.length > 0;
   const inactive = agent.status === "inactive";
-  const typeCfg = TYPE_CFG[mode][agent.type];
+  const typeCfg = agent.type ? TYPE_CFG[mode][agent.type] : null;
 
   return (
     <div style={{ width: "100%" }}>
@@ -217,13 +218,15 @@ function AgentBox({ agent, accent, mode, theme }) {
           {agent.desc}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          <span style={{
-            fontSize: 10, fontWeight: 600, padding: "3px 6px", lineHeight: 1,
-            display: "inline-flex", alignItems: "center", borderRadius: 5,
-            background: typeCfg.bg, color: typeCfg.text,
-          }}>
-            {agent.type}
-          </span>
+          {typeCfg && (
+            <span style={{
+              fontSize: 10, fontWeight: 600, padding: "3px 6px", lineHeight: 1,
+              display: "inline-flex", alignItems: "center", borderRadius: 5,
+              background: typeCfg.bg, color: typeCfg.text,
+            }}>
+              {agent.type}
+            </span>
+          )}
           <span style={{ fontSize: 10, color: theme.textFaint }}>{agent.pc}</span>
           <span style={{ fontSize: 10, color: theme.textFaint }}>· {agent.storage}</span>
         </div>
