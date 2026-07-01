@@ -1,13 +1,13 @@
 export const AGENT_DB = {
-  '씻다': '38711ccd-aa0d-80bb-ba45-ed23022c72ac',
-  '세이퍼': '38711ccd-aa0d-8055-b6a3-ce867c2f53c4',
-  '웰라수': '38711ccd-aa0d-8074-b834-c8c0c16bc09e',
+  '씻다': '64911ccd-aa0d-8319-b60e-8138d6f778ed',
+  '세이퍼': '49511ccd-aa0d-83e0-8d7b-81a4b519c3f4',
+  '웰라수': '7f611ccd-aa0d-82ca-b5ff-0120ec952fea',
 }
 
 export const LOG_DB = {
-  '씻다': '904a4040-625c-4867-8757-dfcfc16ec4a8',
-  '세이퍼': '1510dd10-a28f-4e8c-ab76-fadf17bd188c',
-  '웰라수': 'fcc6a033-a825-4c74-804a-e2cabca186a9',
+  '씻다': 'ca011ccd-aa0d-8252-9a6e-01cb9b746942',
+  '세이퍼': '3e611ccd-aa0d-8393-8c25-0104069acd40',
+  '웰라수': '95b11ccd-aa0d-83cf-9f7d-0154271b76cb',
 }
 
 export function notionHeaders() {
@@ -30,6 +30,9 @@ export function parseAgent(page) {
     description: p['설명']?.rich_text?.[0]?.plain_text ?? '',
     task: p['담당업무']?.rich_text?.[0]?.plain_text ?? '',
     lastRun: p['마지막실행시간']?.date?.start ?? null,
+    pc: p['PC']?.select?.name ?? '',
+    storage: p['저장파일']?.select?.name ?? '',
+    type: (p['자동화/에이전트']?.multi_select ?? []).map(t => t.name),
   }
 }
 

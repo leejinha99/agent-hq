@@ -98,7 +98,7 @@ else:
 
 **스캔 경로:**
 ```
-/Users/ijinha/옵시디언(업무)/Obsidian_macbook_local/◈Obsidian_{회사}◈/{번호}. Obsidian_{회사}_{부서}/
+/Users/mainpc/Desktop/업무 자동화(맥미니)/Obsidian_맥미니/◈Obsidian_{회사}◈/{번호}. Obsidian_{회사}_{부서}/
 ```
 
 **부서명 매핑 (폴더명 → Notion `department` 필드):**

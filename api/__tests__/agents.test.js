@@ -14,6 +14,9 @@ describe('parseAgent', () => {
         '설명': { rich_text: [{ plain_text: '백엔드 담당' }] },
         '담당업무': { rich_text: [{ plain_text: '백엔드 개발' }] },
         '마지막실행시간': { date: { start: '2026-06-22T09:00:00.000Z' } },
+        'PC': { select: { name: '맥미니' } },
+        '저장파일': { select: { name: '아이클라우드' } },
+        '자동화/에이전트': { multi_select: [{ name: 'VS코드' }] },
       },
     }
     const result = parseAgent(page)
@@ -27,6 +30,9 @@ describe('parseAgent', () => {
       description: '백엔드 담당',
       task: '백엔드 개발',
       lastRun: '2026-06-22T09:00:00.000Z',
+      pc: '맥미니',
+      storage: '아이클라우드',
+      type: ['VS코드'],
     })
   })
 

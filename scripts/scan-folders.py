@@ -25,7 +25,7 @@ except ImportError:
 
 # ── 설정 ────────────────────────────────────────────────────────────────────
 
-VAULT_BASE = Path("/Users/ijinha/옵시디언(업무)/Obsidian_macbook_local")
+VAULT_BASE = Path("/Users/mainpc/Desktop/업무 자동화(맥미니)/Obsidian_맥미니")
 
 COMPANY_FOLDERS = {
     '씻다':  VAULT_BASE / '◈Obsidian_씻다◈',

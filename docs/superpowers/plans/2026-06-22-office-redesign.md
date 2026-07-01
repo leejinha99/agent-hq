@@ -790,7 +790,7 @@ import json
 
 # ── 설정 ────────────────────────────────────────────────────────────────────
 
-VAULT_BASE = Path("/Users/ijinha/옵시디언(업무)/Obsidian_macbook_local")
+VAULT_BASE = Path("/Users/mainpc/Desktop/업무 자동화(맥미니)/Obsidian_맥미니")
 
 COMPANY_FOLDERS = {
     '씻다':  VAULT_BASE / '◈Obsidian_씻다◈',
@@ -983,7 +983,7 @@ cat ~/.claude/settings.json | python3 -m json.tool
   "hooks": [
     {
       "type": "command",
-      "command": "python3 /Users/ijinha/옵시디언(업무)/Obsidian_macbook_local/AI\\ 에이전트\\ 회사팀\\ 사이트/scripts/scan-folders.py"
+      "command": "python3 /Users/mainpc/Desktop/업무 자동화(맥미니)/Obsidian_맥미니/AI\\ 에이전트\\ 회사팀\\ 사이트/scripts/scan-folders.py"
     }
   ]
 }
@@ -1002,7 +1002,7 @@ cat ~/.claude/settings.json | python3 -m json.tool
 - [ ] **Step 4: Vercel 재배포**
 
 ```bash
-cd "/Users/ijinha/옵시디언(업무)/Obsidian_macbook_local/AI 에이전트 회사팀 사이트/"
+cd "/Users/mainpc/Desktop/업무 자동화(맥미니)/Obsidian_맥미니/AI 에이전트 회사팀 사이트/"
 git push
 npx vercel deploy --prod --yes --scope leejinha99s-projects --token=<VERCEL_TOKEN>
 ```

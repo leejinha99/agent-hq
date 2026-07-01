@@ -28,3 +28,7 @@ dist-ssr/
 *.njsproj
 *.sln
 *.sw?
+.vercel
+
+# Local hook state (per-machine, not shared)
+scripts/.scan_state.json
