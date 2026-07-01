@@ -2,78 +2,47 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { useNotion, computeStatus } from './useNotion'
 
-const mockAgents = [{ id: '1', name: 'safer_app_backend', department: '앱관리' }]
-const mockLogs = { logs: [{ id: '2', agentName: 'safer_app_backend', status: '✅완료' }], hasMore: false, nextCursor: null }
+const mockAgents = [{ id: '1', name: 'safer_app_backend', department: '앱관리', status: '🟢활성' }]
 
 beforeEach(() => {
-  vi.stubGlobal('fetch', vi.fn((url) => {
-    if (url.includes('/api/agents')) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) })
-    }
-    return Promise.resolve({ ok: true, json: () => Promise.resolve(mockLogs) })
-  }))
+  vi.stubGlobal('fetch', vi.fn(() =>
+    Promise.resolve({ ok: true, json: () => Promise.resolve(mockAgents) })
+  ))
 })
 
 describe('useNotion', () => {
-  it('fetches agents and logs on mount', async () => {
+  it('fetches agents on mount and attaches computedStatus', async () => {
     const { result } = renderHook(() => useNotion('세이퍼'))
     await waitFor(() => expect(result.current.agents.length).toBe(1))
     expect(result.current.agents[0].name).toBe('safer_app_backend')
-    expect(result.current.logs.length).toBe(1)
+    expect(result.current.agents[0].computedStatus).toBe('active')
   })
 
-  it('starts countdown at 30', async () => {
+  it('starts countdown at 300', async () => {
     const { result } = renderHook(() => useNotion('씻다'))
     await waitFor(() => expect(result.current.agents).toBeDefined())
-    expect(result.current.secondsUntilRefresh).toBe(30)
+    expect(result.current.secondsUntilRefresh).toBe(300)
   })
 })
 
 describe('computeStatus', () => {
-  const baseAgent = { name: 'seatda_marketing', status: '🟡쉬는 중' }
-
-  it('returns inactive when agent status is 🔴비활성', () => {
-    const agent = { ...baseAgent, status: '🔴비활성' }
-    expect(computeStatus(agent, [])).toBe('inactive')
+  it('maps 🟢활성 to active', () => {
+    expect(computeStatus({ status: '🟢활성' })).toBe('active')
   })
 
-  it('returns resting when active but no logs', () => {
-    expect(computeStatus(baseAgent, [])).toBe('resting')
+  it('maps 🟡개발중 to developing', () => {
+    expect(computeStatus({ status: '🟡개발중' })).toBe('developing')
   })
 
-  it('returns working when latest log is within 1 hour', () => {
-    const recentLog = {
-      agentName: 'seatda_marketing',
-      time: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      status: '✅완료',
-    }
-    expect(computeStatus(baseAgent, [recentLog])).toBe('working')
+  it('maps 🟡쉬는 중 to active', () => {
+    expect(computeStatus({ status: '🟡쉬는 중' })).toBe('active')
   })
 
-  it('returns resting when latest log is older than 1 hour', () => {
-    const oldLog = {
-      agentName: 'seatda_marketing',
-      time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      status: '✅완료',
-    }
-    expect(computeStatus(baseAgent, [oldLog])).toBe('resting')
+  it('maps 🔴비활성 to inactive', () => {
+    expect(computeStatus({ status: '🔴비활성' })).toBe('inactive')
   })
 
-  it('returns blocked when latest log status is 오류', () => {
-    const errorLog = {
-      agentName: 'seatda_marketing',
-      time: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      status: '❌오류',
-    }
-    expect(computeStatus(baseAgent, [errorLog])).toBe('blocked')
-  })
-
-  it('ignores logs from other agents', () => {
-    const otherLog = {
-      agentName: 'other_agent',
-      time: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      status: '✅완료',
-    }
-    expect(computeStatus(baseAgent, [otherLog])).toBe('resting')
+  it('defaults unknown status to inactive', () => {
+    expect(computeStatus({ status: '' })).toBe('inactive')
   })
 })

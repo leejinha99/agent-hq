@@ -9,50 +9,76 @@ const COMPANIES = [
 
 /* ---------------- REAL DATA MAPPING ----------------
    useNotion(company)이 돌려주는 agents를 조직도가 기대하는
-   { name, agents: [{ name, type, status, runState, desc, pc, storage, last, subAgents }] } 형태로 변환.
+   { name, agents: [{ name, type, status, desc, pc, storage, subAgents }] } 형태로 변환.
+   status는 Notion "상태" 필드를 그대로 반영 (active | developing | inactive) — 로그 기반 실시간 계산 없음.
 ----------------------------------------------------- */
 
-const RUN_STATE_MAP = { working: "running", blocked: "error", resting: "idle", inactive: "idle" };
 const TYPE_KEYS = ["VS코드", "에이전트", "자동화"];
 
 function mapType(types) {
   return TYPE_KEYS.find((k) => types?.includes(k)) ?? "자동화";
 }
 
-function formatLast(iso) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  return `${mm}.${dd} ${hh}:${mi}`;
-}
-
 function mapAgent(a) {
-  const inactive = a.computedStatus === "inactive";
   return {
     id: a.id,
     name: a.name,
     type: mapType(a.type),
-    status: inactive ? "비활성" : "활성",
-    runState: RUN_STATE_MAP[a.computedStatus] ?? "idle",
+    status: a.computedStatus, // 'active' | 'developing' | 'inactive'
     desc: a.description || a.task || "",
     pc: a.pc || "—",
     storage: a.storage || "—",
-    last: formatLast(a.lastRun),
+    subAgents: [],
   };
 }
 
+// 서브에이전트는 같은 DB에 "부모이름_접미사" 형태 이름으로 들어온 별도 행.
+// 예: wellasu_finance_재무관리 (부모) / wellasu_finance_재무관리_자금월보 (서브)
+function splitTopLevelAndSubAgents(agents) {
+  const names = agents.map((a) => a.name);
+  const subOf = new Map(); // subAgentName -> parentName
+
+  for (const name of names) {
+    let parent = null;
+    for (const candidate of names) {
+      if (candidate === name) continue;
+      if (name.startsWith(candidate + "_") && (!parent || candidate.length > parent.length)) {
+        parent = candidate;
+      }
+    }
+    if (parent) subOf.set(name, parent);
+  }
+
+  const byName = new Map(agents.map((a) => [a.name, a]));
+  const topLevel = [];
+  for (const a of agents) {
+    if (!subOf.has(a.name)) topLevel.push(a);
+  }
+  for (const [subName, parentName] of subOf) {
+    const parent = byName.get(parentName);
+    const sub = byName.get(subName);
+    if (parent && sub) parent.__subAgents = [...(parent.__subAgents || []), sub];
+  }
+  return topLevel;
+}
+
 function buildDepts(agents) {
+  const topLevel = splitTopLevelAndSubAgents(agents);
   const order = [];
   const byDept = new Map();
-  for (const a of agents) {
+  for (const a of topLevel) {
     const dept = a.department || "미분류";
     if (!byDept.has(dept)) { byDept.set(dept, []); order.push(dept); }
-    byDept.get(dept).push(a);
+    const mapped = mapAgent(a);
+    mapped.subAgents = (a.__subAgents || []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      desc: s.description || s.task || "",
+      status: s.computedStatus,
+    }));
+    byDept.get(dept).push(mapped);
   }
-  return order.map((name) => ({ name, agents: byDept.get(name).map(mapAgent) }));
+  return order.map((name) => ({ name, agents: byDept.get(name) }));
 }
 
 /* ---------------- THEME ---------------- */
@@ -83,10 +109,10 @@ const TYPE_CFG = {
   },
 };
 
-const RUN_CFG = {
-  running: { color: "#3B82F6", label: "실행 중", glow: true },
-  idle:    { color: "#9CA3AF", label: "대기",    glow: false },
-  error:   { color: "#EF4444", label: "오류",    glow: true },
+const STATUS_CFG = {
+  active:     { color: "#22C55E", label: "활성" },
+  developing: { color: "#EAB308", label: "개발중" },
+  inactive:   { color: "#9CA3AF", label: "비활성" },
 };
 
 /* ---------------- CONNECTORS ---------------- */
@@ -112,14 +138,12 @@ function BranchLine({ count, color, h = 16 }) {
 
 /* ---------------- COMPONENTS ---------------- */
 
-function RunDot({ runState }) {
-  const cfg = RUN_CFG[runState] || RUN_CFG.idle;
+function StatusDot({ status }) {
+  const cfg = STATUS_CFG[status] || STATUS_CFG.inactive;
   return (
     <span style={{
       width: 7, height: 7, borderRadius: "50%",
       background: cfg.color, flexShrink: 0,
-      boxShadow: cfg.glow ? `0 0 5px ${cfg.color}AA` : "none",
-      animation: runState === "running" ? "pulseDot 1.6s infinite" : "none",
     }} />
   );
 }
@@ -132,7 +156,7 @@ function SubAgentCard({ sub, theme }) {
       borderRadius: 9, padding: "8px 9px",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-        <RunDot runState={sub.runState} />
+        <StatusDot status={sub.status} />
         <span style={{ fontSize: 11.5, fontWeight: 700, color: theme.textPrimary }}>{sub.name}</span>
       </div>
       <div style={{ fontSize: 10, color: theme.textSecondary, lineHeight: 1.45 }}>{sub.desc}</div>
@@ -159,51 +183,35 @@ function ToggleArrow({ open, accent }) {
   );
 }
 
-function AgentBox({ agent, accent, mode, theme, companyName }) {
+function AgentBox({ agent, accent, mode, theme }) {
   const [open, setOpen] = useState(false);
-  const [subAgents, setSubAgents] = useState(null); // null = 아직 조회 안 함
-  const [loadingSubs, setLoadingSubs] = useState(false);
-  const inactive = agent.status === "비활성";
+  const hasSubs = agent.subAgents.length > 0;
+  const inactive = agent.status === "inactive";
   const typeCfg = TYPE_CFG[mode][agent.type];
-
-  const toggleOpen = async () => {
-    const next = !open;
-    setOpen(next);
-    if (next && subAgents === null) {
-      setLoadingSubs(true);
-      try {
-        const res = await fetch(`/api/subagents?company=${encodeURIComponent(companyName)}&pageId=${encodeURIComponent(agent.id)}`);
-        setSubAgents(res.ok ? await res.json() : []);
-      } catch {
-        setSubAgents([]);
-      }
-      setLoadingSubs(false);
-    }
-  };
 
   return (
     <div style={{ width: "100%" }}>
       <div
-        onClick={toggleOpen}
+        onClick={() => hasSubs && setOpen(!open)}
         style={{
           background: inactive ? theme.panel : (mode === "dark" ? accent + "1C" : accent + "0F"),
           border: `1px solid ${inactive ? theme.border : accent + "55"}`,
           borderRadius: 11,
           padding: "10px 10px 10px 12px",
-          cursor: "pointer",
+          cursor: hasSubs ? "pointer" : "default",
           opacity: inactive ? 0.6 : 1,
           transition: "border-color .15s, background .15s",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6.4 }}>
-          <RunDot runState={agent.runState} />
+          <StatusDot status={agent.status} />
           <span style={{
             fontSize: 12, fontWeight: 700, color: theme.textPrimary,
             flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
             {agent.name}
           </span>
-          <ToggleArrow open={open} accent={accent} />
+          {hasSubs && <ToggleArrow open={open} accent={accent} />}
         </div>
         <div style={{ fontSize: 11, color: theme.textSecondary, lineHeight: 1.45, marginBottom: 7 }}>
           {agent.desc}
@@ -218,31 +226,22 @@ function AgentBox({ agent, accent, mode, theme, companyName }) {
           </span>
           <span style={{ fontSize: 10, color: theme.textFaint }}>{agent.pc}</span>
           <span style={{ fontSize: 10, color: theme.textFaint }}>· {agent.storage}</span>
-          <span style={{ fontSize: 10, color: theme.textFaint, marginLeft: "auto" }}>{agent.last}</span>
         </div>
       </div>
 
-      {open && (
+      {hasSubs && open && (
         <>
-          <BranchLine count={Math.max(subAgents?.length ?? 1, 1)} color={accent + "70"} h={14} />
-          {loadingSubs && (
-            <div style={{ fontSize: 10.5, color: theme.textFaint, padding: "2px 2px 4px" }}>불러오는 중...</div>
-          )}
-          {!loadingSubs && subAgents?.length === 0 && (
-            <div style={{ fontSize: 10.5, color: theme.textFaint, padding: "2px 2px 4px" }}>서브에이전트 없음</div>
-          )}
-          {!loadingSubs && subAgents?.length > 0 && (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {subAgents.map((sub) => <SubAgentCard key={sub.id} sub={sub} theme={theme} />)}
-            </div>
-          )}
+          <BranchLine count={agent.subAgents.length} color={accent + "70"} h={14} />
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {agent.subAgents.map((sub) => <SubAgentCard key={sub.id} sub={sub} theme={theme} />)}
+          </div>
         </>
       )}
     </div>
   );
 }
 
-function DeptColumn({ dept, accent, accentDark, mode, theme, companyName }) {
+function DeptColumn({ dept, accent, accentDark, mode, theme }) {
   return (
     <div style={{ minWidth: 172, flex: "1 0 172px" }}>
       <div style={{
@@ -264,7 +263,7 @@ function DeptColumn({ dept, accent, accentDark, mode, theme, companyName }) {
       <VLine h={14} color={accent + "80"} />
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {dept.agents.map((agent) => (
-          <AgentBox key={agent.id} agent={agent} accent={accent} mode={mode} theme={theme} companyName={companyName} />
+          <AgentBox key={agent.id} agent={agent} accent={accent} mode={mode} theme={theme} />
         ))}
       </div>
     </div>
@@ -306,7 +305,7 @@ function OrgChart({ company, mode, theme }) {
 
         <div style={{ display: "flex", gap: 10 }}>
           {company.depts.map((dept) => (
-            <DeptColumn key={dept.name} dept={dept} accent={company.accent} accentDark={company.accentDark} mode={mode} theme={theme} companyName={company.name} />
+            <DeptColumn key={dept.name} dept={dept} accent={company.accent} accentDark={company.accentDark} mode={mode} theme={theme} />
           ))}
         </div>
       </div>
@@ -343,7 +342,7 @@ function ThemeToggle({ mode, setMode }) {
 function Legend({ theme }) {
   return (
     <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-      {Object.entries(RUN_CFG).map(([key, cfg]) => (
+      {Object.entries(STATUS_CFG).map(([key, cfg]) => (
         <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: cfg.color }} />
           <span style={{ fontSize: 11, color: theme.textSecondary }}>{cfg.label}</span>
@@ -376,7 +375,6 @@ export default function Dashboard() {
       <style>{`
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
         * { box-sizing: border-box; margin:0; padding:0; }
-        @keyframes pulseDot { 0%,100% { opacity:1 } 50% { opacity:0.45 } }
       `}</style>
 
       <div style={{ marginBottom: 18 }}>
