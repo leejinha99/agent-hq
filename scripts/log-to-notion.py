@@ -6,10 +6,17 @@ Claude Code stop hook: 작업 완료 시 Notion 로그 DB에 자동 기록
 import json
 import os
 import re
+import ssl
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib import request, error
+
+try:
+    import certifi
+    SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+except ImportError:
+    SSL_CONTEXT = None
 
 def _load_api_key() -> str:
     key = os.environ.get('NOTION_API_KEY', '')
@@ -25,9 +32,9 @@ def _load_api_key() -> str:
 NOTION_API_KEY = _load_api_key()
 
 LOG_DB = {
-    '씻다':  '904a4040-625c-4867-8757-dfcfc16ec4a8',
-    '세이퍼': '1510dd10-a28f-4e8c-ab76-fadf17bd188c',
-    '웰라수': 'fcc6a033-a825-4c74-804a-e2cabca186a9',
+    '씻다':  'ca011ccd-aa0d-8252-9a6e-01cb9b746942',
+    '세이퍼': '3e611ccd-aa0d-8393-8c25-0104069acd40',
+    '웰라수': '95b11ccd-aa0d-83cf-9f7d-0154271b76cb',
 }
 
 def get_company(agent_name: str) -> str | None:
@@ -98,7 +105,7 @@ def post_to_notion(company: str, agent_name: str, task_desc: str) -> None:
         },
         method='POST',
     )
-    with request.urlopen(req) as resp:
+    with request.urlopen(req, context=SSL_CONTEXT) as resp:
         if resp.status not in (200, 201):
             raise RuntimeError(f'Notion API error: {resp.status}')
 
