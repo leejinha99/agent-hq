@@ -35,6 +35,8 @@ function mapAgent(a) {
 
 // 서브에이전트는 같은 DB에 "부모이름_접미사" 형태 이름으로 들어온 별도 행.
 // 예: wellasu_finance_재무관리 (부모) / wellasu_finance_재무관리_자금월보 (서브)
+// 원본 agents 배열/객체는 절대 변형하지 않는다 — buildDepts가 매 렌더(1초 카운트다운)마다
+// 재호출되므로, 예전처럼 parent 객체에 append하면 호출할 때마다 서브 목록이 중복 누적된다.
 function splitTopLevelAndSubAgents(agents) {
   const names = agents.map((a) => a.name);
   const subOf = new Map(); // subAgentName -> parentName
@@ -51,16 +53,16 @@ function splitTopLevelAndSubAgents(agents) {
   }
 
   const byName = new Map(agents.map((a) => [a.name, a]));
-  const topLevel = [];
-  for (const a of agents) {
-    if (!subOf.has(a.name)) topLevel.push(a);
-  }
+  const subsByParent = new Map(); // parentName -> [subAgent, ...]
   for (const [subName, parentName] of subOf) {
-    const parent = byName.get(parentName);
-    const sub = byName.get(subName);
-    if (parent && sub) parent.__subAgents = [...(parent.__subAgents || []), sub];
+    if (!byName.has(parentName) || !byName.has(subName)) continue;
+    if (!subsByParent.has(parentName)) subsByParent.set(parentName, []);
+    subsByParent.get(parentName).push(byName.get(subName));
   }
-  return topLevel;
+
+  return agents
+    .filter((a) => !subOf.has(a.name))
+    .map((a) => ({ ...a, __subAgents: subsByParent.get(a.name) || [] }));
 }
 
 function buildDepts(agents) {
@@ -71,10 +73,10 @@ function buildDepts(agents) {
     const dept = a.department || "미분류";
     if (!byDept.has(dept)) { byDept.set(dept, []); order.push(dept); }
     const mapped = mapAgent(a);
-    mapped.subAgents = (a.__subAgents || []).map((s) => ({
+    mapped.subAgents = a.__subAgents.map((s) => ({
       id: s.id,
       name: s.name,
-      desc: s.description || s.task || "",
+      desc: s.task || s.description || "",
       status: s.computedStatus,
     }));
     byDept.get(dept).push(mapped);
@@ -175,7 +177,7 @@ function ToggleArrow({ open, accent }) {
       transition: "background .15s, transform .2s",
     }}>
       <span style={{
-        fontSize: 21, lineHeight: 1, color: open ? "white" : accent,
+        fontSize: 16.8, lineHeight: 1, color: open ? "white" : accent,
         transform: open ? "rotate(180deg)" : "none", transition: "transform .2s",
       }}>
         ▾
