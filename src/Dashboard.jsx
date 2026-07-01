@@ -158,9 +158,14 @@ function SubAgentCard({ sub, theme }) {
       background: theme.subCardBg, border: `1px solid ${theme.borderSoft}`,
       borderRadius: 9, padding: "8px 9px",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-        <StatusDot status={sub.status} />
-        <span style={{ fontSize: 11.5, fontWeight: 700, color: theme.textPrimary }}>{sub.name}</span>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 5, marginBottom: 3 }}>
+        <span style={{ marginTop: 3, flexShrink: 0 }}><StatusDot status={sub.status} /></span>
+        <span style={{
+          fontSize: 11.5, fontWeight: 700, color: theme.textPrimary,
+          minWidth: 0, overflowWrap: "break-word", wordBreak: "break-word",
+        }}>
+          {sub.name}
+        </span>
       </div>
       <div style={{ fontSize: 10, color: theme.textSecondary, lineHeight: 1.45 }}>{sub.desc}</div>
     </div>
