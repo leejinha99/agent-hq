@@ -1,5 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNotion } from "./hooks/useNotion";
+
+// 모바일 1단 / 태블릿 2단 / 작은 PC 3단 / 큰 PC 4단
+const DEPT_COLUMNS_BY_BREAKPOINT = { mobile: 1, tablet: 2, "desktop-sm": 3, "desktop-lg": 4 };
+
+function getBreakpoint(width) {
+  if (width < 640) return "mobile";
+  if (width < 1024) return "tablet";
+  if (width < 1440) return "desktop-sm";
+  return "desktop-lg";
+}
+
+function useBreakpoint() {
+  const [breakpoint, setBreakpoint] = useState(() =>
+    getBreakpoint(typeof window === "undefined" ? 1440 : window.innerWidth)
+  );
+
+  useEffect(() => {
+    const onResize = () => setBreakpoint(getBreakpoint(window.innerWidth));
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return breakpoint;
+}
 
 const COMPANIES = [
   { id: "ssikda", name: "씻다", sub: "IoT · 비데", accent: "#6B8FC2", accentDark: "#4B607F" },
@@ -251,9 +276,10 @@ function AgentBox({ agent, accent, mode, theme }) {
   );
 }
 
-function DeptColumn({ dept, accent, accentDark, mode, theme }) {
+function DeptColumn({ dept, accent, accentDark, mode, theme, breakpoint }) {
+  const agentGrid = breakpoint === "mobile";
   return (
-    <div style={{ minWidth: 172, flex: "1 0 172px" }}>
+    <div style={{ minWidth: 0 }}>
       <div style={{
         background: mode === "dark" ? accent : accentDark,
         color: "white",
@@ -263,7 +289,6 @@ function DeptColumn({ dept, accent, accentDark, mode, theme }) {
         fontSize: 12,
         fontWeight: 700,
         letterSpacing: "0.01em",
-        position: "sticky", top: 0, zIndex: 1,
       }}>
         {dept.name}
         <span style={{ fontWeight: 600, fontSize: 10, opacity: 0.7, marginLeft: 4 }}>
@@ -271,7 +296,10 @@ function DeptColumn({ dept, accent, accentDark, mode, theme }) {
         </span>
       </div>
       <VLine h={14} color={accent + "80"} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={agentGrid
+        ? { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }
+        : { display: "flex", flexDirection: "column", gap: 8 }
+      }>
         {dept.agents.map((agent) => (
           <AgentBox key={agent.id} agent={agent} accent={accent} mode={mode} theme={theme} />
         ))}
@@ -280,44 +308,52 @@ function DeptColumn({ dept, accent, accentDark, mode, theme }) {
   );
 }
 
-function OrgChart({ company, mode, theme }) {
+function OrgChart({ company, mode, theme, breakpoint }) {
   const totalAgents = company.depts.reduce((s, d) => s + d.agents.length, 0);
+  const columns = DEPT_COLUMNS_BY_BREAKPOINT[breakpoint];
+  // 부서 수가 한 줄(columns) 안에 다 들어갈 때만 중앙 원 → 부서 트리 연결선을 그림.
+  // 여러 줄로 꺾이면(모바일/태블릿, 혹은 PC라도 부서가 많으면) 연결선 대신 단순 세로선만 사용.
+  const singleRow = company.depts.length <= columns;
 
   return (
-    <div style={{ overflowX: "auto", paddingBottom: 8 }}>
-      <div style={{ minWidth: 1320 }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 0 }}>
+    <div>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 0 }}>
+        <div style={{
+          position: "relative",
+          width: 92, height: 92,
+          borderRadius: "50%",
+          background: company.accent + "1A",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
           <div style={{
-            position: "relative",
-            width: 92, height: 92,
-            borderRadius: "50%",
-            background: company.accent + "1A",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 70, height: 70, borderRadius: "50%",
+            background: company.accent,
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            color: "white", textAlign: "center",
+            boxShadow: `0 4px 14px ${company.accent}40`,
           }}>
-            <div style={{
-              width: 70, height: 70, borderRadius: "50%",
-              background: company.accent,
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              color: "white", textAlign: "center",
-              boxShadow: `0 4px 14px ${company.accent}40`,
-            }}>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>{company.name}</div>
-              <div style={{ fontSize: 8.5, opacity: 0.85, marginTop: 1 }}>{totalAgents}개</div>
-            </div>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>{company.name}</div>
+            <div style={{ fontSize: 8.5, opacity: 0.85, marginTop: 1 }}>{totalAgents}개</div>
           </div>
         </div>
-        <div style={{ textAlign: "center", fontSize: 10.5, color: theme.textFaint, margin: "18px 0 6px" }}>
-          {company.sub} · 부서 {company.depts.length}개
-        </div>
+      </div>
+      <div style={{ textAlign: "center", fontSize: 10.5, color: theme.textFaint, margin: "18px 0 6px" }}>
+        {company.sub} · 부서 {company.depts.length}개
+      </div>
 
-        <BranchLine count={company.depts.length} color={theme.border} h={18} />
+      {singleRow
+        ? <BranchLine count={company.depts.length} color={theme.border} h={18} />
+        : <VLine h={18} color={theme.border} />}
 
-        <div style={{ display: "flex", gap: 10 }}>
-          {company.depts.map((dept) => (
-            <DeptColumn key={dept.name} dept={dept} accent={company.accent} accentDark={company.accentDark} mode={mode} theme={theme} />
-          ))}
-        </div>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${singleRow ? company.depts.length : columns}, 1fr)`,
+        gap: 10,
+      }}>
+        {company.depts.map((dept) => (
+          <DeptColumn key={dept.name} dept={dept} accent={company.accent} accentDark={company.accentDark} mode={mode} theme={theme} breakpoint={breakpoint} />
+        ))}
       </div>
     </div>
   );
@@ -372,6 +408,7 @@ export default function Dashboard() {
   const { agents, fetchError } = useNotion(baseCompany.name);
   const company = { ...baseCompany, depts: buildDepts(agents) };
   const loading = !fetchError && agents.length === 0;
+  const breakpoint = useBreakpoint();
 
   return (
     <div style={{
@@ -434,11 +471,11 @@ export default function Dashboard() {
             불러오는 중...
           </div>
         )}
-        {!loading && <OrgChart company={company} mode={mode} theme={theme} />}
+        {!loading && <OrgChart company={company} mode={mode} theme={theme} breakpoint={breakpoint} />}
       </div>
 
       <div style={{ marginTop: 14, fontSize: 11, color: theme.textFaint, textAlign: "center" }}>
-        부서 {company.depts.length}개 · 에이전트 {agents.length}개 · 가로 스크롤로 전체 확인 가능
+        부서 {company.depts.length}개 · 에이전트 {agents.length}개
       </div>
     </div>
   );
